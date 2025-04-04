@@ -23,16 +23,19 @@
     <div class="box">
         <h3>Step 1: Generate RSA Keys</h3>
         <p class="info">
-            Two prime numbers <b>p</b> and <b>q</b> are selected. Then mod <b>n</b> is calculated as <b>n = p × q</b>.
+            Two prime numbers <b>p</b> and <b>q</b> are selected. Then mod <b>n</b> is calculated as <b>n = p × q</b>.<br>
             Then, <b>r(n) = (p-1) × (q-1)</b>. Next a public exponent is chosen, <b>e</b> such that <b>gcd(e, r(n)) = 1</b>, and
             compute the private key <b>d</b>, which is the modular inverse of <b>e</b> mod <b>r(n)</b>.
         </p>
-        <button id="generateBtn">Generate Keys</button>
-        <p><strong>p:</strong> <span id="p"></span></p>
-        <p><strong>q:</strong> <span id="q"></span></p>
-        <p><strong>n:</strong> <span id="n"></span></p>
-        <p><strong>e:</strong> <span id="e"></span></p>
-        <p><strong>d:</strong> <span id="d"></span></p>
+        <form method="POST" onsubmit="generateKeys(event)">
+            <input type="hidden" name="action" value="generate">
+            <button type="submit">Generate Keys</button>
+        </form>
+        <p><strong>p:</strong> <span id="p">{{ p }}</span></p>
+        <p><strong>q:</strong> <span id="q">{{ q }}</span></p>
+        <p><strong>n:</strong> <span id="n">{{ n }}</span></p>
+        <p><strong>e:</strong> <span id="e">{{ e }}</span></p>
+        <p><strong>d:</strong> <span id="d">{{ d }}</span></p>
     </div>
 
     <!-- Encryption -->
@@ -42,11 +45,12 @@
             Each character in the message is converted to a number (ASCII code) and encrypted using the formula:
             <b>ciphertext = (plaintext<sup>e</sup>) mod n</b>.
         </p>
-        <form id="encryptForm">
-            <textarea name="message" placeholder="Enter message to encrypt"></textarea>
+        <form method="POST" onsubmit="encryptMessage(event)">
+            <input type="hidden" name="action" value="encrypt">
+            <textarea id="message" placeholder="Enter message to encrypt">{{ plaintext }}</textarea>
             <button type="submit">Encrypt</button>
         </form>
-        <p><strong>Encrypted Message:</strong> <span id="ciphertext"></span></p>
+        <p><strong>Encrypted Message:</strong> <span id="encrypted-message">{{ ciphertext }}</span></p>
     </div>
 
     <!-- Decryption -->
@@ -56,109 +60,104 @@
             The encrypted numbers are decrypted using the private key <b>d</b> with the formula:
             <b>plaintext = (ciphertext<sup>d</sup>) mod n</b>. This restores the original message.
         </p>
-        <form id="decryptForm">
-            <textarea name="ciphertext" placeholder="Enter ciphertext to decrypt"></textarea>
+        <form method="POST" onsubmit="decryptMessage(event)">
+            <input type="hidden" name="action" value="decrypt">
+            <textarea id="ciphertext" placeholder="Enter ciphertext to decrypt">{{ ciphertext }}</textarea>
             <button type="submit">Decrypt</button>
         </form>
-        <p><strong>Decrypted Message:</strong> <span id="decrypted"></span></p>
+        <p><strong>Decrypted Message:</strong> <span id="decrypted-message">{{ decrypted }}</span></p>
     </div>
 
 </div>
 
 <script>
-    // Helper functions for RSA Key Generation, Encryption and Decryption
+    let p, q, n, e, d;
+
+    function generateKeys(event) {
+        event.preventDefault();
+        p = parseInt(document.getElementById('p').innerText);
+        q = parseInt(document.getElementById('q').innerText);
+        n = p * q;
+        let r = (p - 1) * (q - 1);
+
+        e = findPublicExponent(r);
+        d = findModInverse(e, r);
+
+        // Update UI with generated keys
+        document.getElementById('n').innerText = n;
+        document.getElementById('e').innerText = e;
+        document.getElementById('d').innerText = d;
+    }
+
+    function findPublicExponent(r) {
+        for (let i = 2; i < r; i++) {
+            if (gcd(i, r) === 1) {
+                return i;
+            }
+        }
+    }
+
     function gcd(a, b) {
         while (b) {
-            [a, b] = [b, a % b];
+            let temp = b;
+            b = a % b;
+            a = temp;
         }
         return a;
     }
 
-    function modInverse(e, r) {
-        for (let d = 2; d < r; d++) {
-            if ((d * e) % r === 1) {
-                return d;
+    function findModInverse(e, r) {
+        for (let i = 2; i < r; i++) {
+            if ((i * e) % r === 1) {
+                return i;
             }
         }
         return null;
     }
 
-    function generateKeys() {
-        const primes = [];
-        for (let i = 10; i < 100; i++) {
-            if (isPrime(i)) primes.push(i);
-        }
-
-        const p = primes[Math.floor(Math.random() * primes.length)];
-        const q = primes[Math.floor(Math.random() * primes.length)];
-        const n = p * q;
-        const r = (p - 1) * (q - 1);
-        let e = Math.floor(Math.random() * (r - 2)) + 2;
-
-        while (gcd(e, r) !== 1) {
-            e = Math.floor(Math.random() * (r - 2)) + 2;
-        }
-
-        const d = modInverse(e, r);
-
-        return { p, q, n, e, d };
-    }
-
-    function isPrime(num) {
-        if (num <= 1) return false;
-        for (let i = 2; i <= Math.sqrt(num); i++) {
-            if (num % i === 0) return false;
-        }
-        return true;
+    function encryptMessage(event) {
+        event.preventDefault();
+        let message = document.getElementById('message').value;
+        let encrypted = encrypt(message, e, n);
+        document.getElementById('encrypted-message').innerText = encrypted.join(', ');
     }
 
     function encrypt(message, e, n) {
-        return message.split('').map(char => Math.pow(char.charCodeAt(0), e) % n);
+        let encrypted = [];
+        for (let i = 0; i < message.length; i++) {
+            let charCode = message.charCodeAt(i);
+            encrypted.push(bigIntModPow(charCode, e, n));
+        }
+        return encrypted;
+    }
+
+    function bigIntModPow(base, exponent, modulus) {
+        let result = 1;
+        base = base % modulus;
+        while (exponent > 0) {
+            if (exponent % 2 === 1) {
+                result = (result * base) % modulus;
+            }
+            exponent = Math.floor(exponent / 2);
+            base = (base * base) % modulus;
+        }
+        return result;
+    }
+
+    function decryptMessage(event) {
+        event.preventDefault();
+        let ciphertext = document.getElementById('ciphertext').value.split(',').map(Number);
+        let decrypted = decrypt(ciphertext, d, n);
+        document.getElementById('decrypted-message').innerText = decrypted;
     }
 
     function decrypt(ciphertext, d, n) {
-        return ciphertext.map(num => String.fromCharCode(Math.pow(num, d) % n)).join('');
+        let decrypted = '';
+        for (let i = 0; i < ciphertext.length; i++) {
+            decrypted += String.fromCharCode(bigIntModPow(ciphertext[i], d, n));
+        }
+        return decrypted;
     }
-
-    // Handle the Generate Keys button
-    document.getElementById('generateBtn').addEventListener('click', function() {
-        const { p, q, n, e, d } = generateKeys();
-        document.getElementById('p').textContent = p;
-        document.getElementById('q').textContent = q;
-        document.getElementById('n').textContent = n;
-        document.getElementById('e').textContent = e;
-        document.getElementById('d').textContent = d;
-    });
-
-    // Handle the Encryption form submission
-    document.getElementById('encryptForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const message = document.querySelector('textarea[name="message"]').value;
-        const e = parseInt(document.getElementById('e').textContent);
-        const n = parseInt(document.getElementById('n').textContent);
-
-        if (e && n) {
-            const encrypted = encrypt(message, e, n);
-            document.getElementById('ciphertext').textContent = encrypted.join(', ');
-        } else {
-            document.getElementById('ciphertext').textContent = 'Error: Missing keys';
-        }
-    });
-
-    // Handle the Decryption form submission
-    document.getElementById('decryptForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const ciphertext = document.querySelector('textarea[name="ciphertext"]').value.split(',').map(num => parseInt(num.trim()));
-        const d = parseInt(document.getElementById('d').textContent);
-        const n = parseInt(document.getElementById('n').textContent);
-
-        if (d && n) {
-            const decrypted = decrypt(ciphertext, d, n);
-            document.getElementById('decrypted').textContent = decrypted;
-        } else {
-            document.getElementById('decrypted').textContent = 'Error: Missing keys';
-        }
-    });
 </script>
 
 </body>
