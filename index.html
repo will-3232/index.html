@@ -1,104 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RSA Calculator</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h2 { color: #333; }
-    textarea { width: 100%; height: 50px; }
-    .container { max-width: 600px; margin: auto; }
-    .box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
-    button { padding: 8px 15px; margin-top: 10px; cursor: pointer; }
-    .info { font-size: 0.9em; color: #555; }
-    .output { margin-top: 10px; background: #fff; padding: 10px; border: 1px solid #ccc; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { color: #333; }
+        textarea { width: 100%; height: 50px; }
+        .container { max-width: 600px; margin: auto; }
+        .box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
+        button { padding: 8px 15px; margin-top: 10px; cursor: pointer; }
+        .info { font-size: 0.9em; color: #555; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>RSA Calculator</h2>
+    <h2>RSA Calculator</h2>
 
-  <!-- Key Generation -->
-  <div class="box">
-    <h3>Step 1: Generate RSA Keys</h3>
-    <p class="info">
-      Two prime numbers <b>p</b> and <b>q</b> are selected. Then <b>n = p × q</b>.
-      We find <b>e</b> such that <b>gcd(e, r(n)) = 1</b>, then compute private key <b>d</b> as modular inverse of <b>e</b>.
-    </p>
-    <button onclick="handleGenerateKeys()">Generate Keys</button>
-    <div class="output">
-      <p><strong>p:</strong> <span id="p"></span></p>
-      <p><strong>q:</strong> <span id="q"></span></p>
-      <p><strong>n:</strong> <span id="n"></span></p>
-      <p><strong>e:</strong> <span id="e"></span></p>
-      <p><strong>d:</strong> <span id="d"></span></p>
+    <!-- Key Generation -->
+    <div class="box">
+        <h3>Step 1: Generate RSA Keys</h3>
+        <p class="info">
+            Two prime numbers <b>p</b> and <b>q</b> are selected. Then mod <b>n</b> is calculated as <b>n = p × q</b>.
+            Then, <b>r(n) = (p-1) × (q-1)</b>. Next a public exponent is chosen, <b>e</b> such that <b>gcd(e, r(n)) = 1</b>, and
+            compute the private key <b>d</b>, which is the modular inverse of <b>e</b> mod <b>r(n)</b>.
+        </p>
+        <button onclick="generateKeys()">Generate Keys</button>
+        <p><strong>p:</strong> <span id="p"></span></p>
+        <p><strong>q:</strong> <span id="q"></span></p>
+        <p><strong>n:</strong> <span id="n"></span></p>
+        <p><strong>e:</strong> <span id="e"></span></p>
+        <p><strong>d:</strong> <span id="d"></span></p>
     </div>
-  </div>
 
-  <!-- Encryption -->
-  <div class="box">
-    <h3>Step 2: Encrypt a Message</h3>
-    <textarea id="plaintext" placeholder="Enter message to encrypt"></textarea>
-    <button onclick="handleEncrypt()">Encrypt</button>
-    <div class="output">
-      <p><strong>Encrypted Message:</strong></p>
-      <p id="ciphertext"></p>
+    <!-- Encryption -->
+    <div class="box">
+        <h3>Step 2: Encrypt a Message</h3>
+        <p class="info">
+            Each character in the message is converted to a number (ASCII code) and encrypted using the formula:
+            <b>ciphertext = (plaintext<sup>e</sup>) mod n</b>.
+        </p>
+        <textarea id="plaintext" placeholder="Enter message to encrypt"></textarea>
+        <button onclick="encryptMessage()">Encrypt</button>
+        <p><strong>Encrypted Message:</strong> <span id="ciphertext"></span></p>
     </div>
-  </div>
 
-  <!-- Decryption -->
-  <div class="box">
-    <h3>Step 3: Decrypt a Message</h3>
-    <textarea id="cipherinput" placeholder="Enter ciphertext to decrypt (e.g. [123n,456n,...])"></textarea>
-    <button onclick="handleDecrypt()">Decrypt</button>
-    <div class="output">
-      <p><strong>Decrypted Message:</strong></p>
-      <p id="decrypted"></p>
+    <!-- Decryption -->
+    <div class="box">
+        <h3>Step 3: Decrypt a Message</h3>
+        <p class="info">
+            The encrypted numbers are decrypted using the private key <b>d</b> with the formula:
+            <b>plaintext = (ciphertext<sup>d</sup>) mod n</b>. This restores the original message.
+        </p>
+        <textarea id="ciphertextInput" placeholder="Enter ciphertext to decrypt"></textarea>
+        <button onclick="decryptMessage()">Decrypt</button>
+        <p><strong>Decrypted Message:</strong> <span id="decrypted"></span></p>
     </div>
-  </div>
+
 </div>
 
-<script src="script.js"></script>
 <script>
-  let keys = {};
+// Key Generation Functions
+function gcd(a, b) {
+    while (b !== 0) {
+        [a, b] = [b, a % b];
+    }
+    return a;
+}
 
-  function handleGenerateKeys() {
-    keys = generateKeys();
-    document.getElementById("p").textContent = keys.p;
-    document.getElementById("q").textContent = keys.q;
-    document.getElementById("n").textContent = keys.n;
-    document.getElementById("e").textContent = keys.e;
-    document.getElementById("d").textContent = keys.d;
-  }
+function modInverse(e, r) {
+    for (let d = 2; d < r; d++) {
+        if ((d * e) % r === 1) {
+            return d;
+        }
+    }
+    return null;
+}
 
-  function handleEncrypt() {
+function generatePrimes(min, max) {
+    const primes = [];
+    for (let i = min; i <= max; i++) {
+        let isPrime = true;
+        for (let j = 2; j <= Math.sqrt(i); j++) {
+            if (i % j === 0) {
+                isPrime = false;
+                break;
+            }
+        }
+        if (isPrime) primes.push(i);
+    }
+    return primes;
+}
+
+function generateKeys() {
+    const primes = generatePrimes(10, 99);
+    const p = primes[Math.floor(Math.random() * primes.length)];
+    let q;
+    do {
+        q = primes[Math.floor(Math.random() * primes.length)];
+    } while (q === p);
+
+    const n = p * q;
+    const r = (p - 1) * (q - 1);
+    const eCandidates = [];
+    for (let i = 2; i < r; i++) {
+        if (gcd(i, r) === 1) eCandidates.push(i);
+    }
+    const e = eCandidates[Math.floor(Math.random() * eCandidates.length)];
+    const d = modInverse(e, r);
+
+    // Display on page
+    document.getElementById("p").textContent = p;
+    document.getElementById("q").textContent = q;
+    document.getElementById("n").textContent = n;
+    document.getElementById("e").textContent = e;
+    document.getElementById("d").textContent = d;
+}
+
+// Encryption Functions
+function encryptMessage() {
     const message = document.getElementById("plaintext").value;
-    if (!keys.e || !keys.n) {
-      alert("Generate keys first.");
-      return;
+    const e = parseInt(document.getElementById("e").textContent);
+    const n = parseInt(document.getElementById("n").textContent);
+    
+    if (!e || !n) {
+        alert("Please generate the keys first.");
+        return;
     }
-    const encrypted = encrypt(message, keys.e, keys.n);
-    document.getElementById("ciphertext").textContent = JSON.stringify(encrypted);
-  }
 
-  function handleDecrypt() {
-    const input = document.getElementById("cipherinput").value;
-    let cipherArray;
-    try {
-      cipherArray = JSON.parse(input);
-    } catch (e) {
-      alert("Invalid ciphertext format. Use JSON array like: [123,456,...]");
-      return;
+    let encrypted = [];
+    for (let i = 0; i < message.length; i++) {
+        encrypted.push(Math.pow(message.charCodeAt(i), e) % n);
     }
-    if (!keys.d || !keys.n) {
-      alert("Generate keys first.");
-      return;
+    document.getElementById("ciphertext").textContent = encrypted.join(", ");
+}
+
+// Decryption Functions
+function decryptMessage() {
+    const ciphertext = document.getElementById("ciphertextInput").value.split(',').map(num => parseInt(num.trim()));
+    const d = parseInt(document.getElementById("d").textContent);
+    const n = parseInt(document.getElementById("n").textContent);
+    
+    if (!d || !n) {
+        alert("Please generate the keys first.");
+        return;
     }
-    const decrypted = decrypt(cipherArray, keys.d, keys.n);
+
+    let decrypted = "";
+    for (let i = 0; i < ciphertext.length; i++) {
+        decrypted += String.fromCharCode(Math.pow(ciphertext[i], d) % n);
+    }
     document.getElementById("decrypted").textContent = decrypted;
-  }
+}
 </script>
+
 </body>
 </html>
