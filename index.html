@@ -27,15 +27,12 @@
             Then, <b>r(n) = (p-1) × (q-1)</b>. Next a public exponent is chosen, <b>e</b> such that <b>gcd(e, r(n)) = 1</b>, and
             compute the private key <b>d</b>, which is the modular inverse of <b>e</b> mod <b>r(n)</b>.
         </p>
-        <form method="POST" onsubmit="generateKeys(event)">
-            <input type="hidden" name="action" value="generate">
-            <button type="submit">Generate Keys</button>
-        </form>
-        <p><strong>p:</strong> <span id="p">{{ p }}</span></p>
-        <p><strong>q:</strong> <span id="q">{{ q }}</span></p>
-        <p><strong>n:</strong> <span id="n">{{ n }}</span></p>
-        <p><strong>e:</strong> <span id="e">{{ e }}</span></p>
-        <p><strong>d:</strong> <span id="d">{{ d }}</span></p>
+        <button onclick="generateKeys()">Generate Keys</button>
+        <p><strong>p:</strong> <span id="p"></span></p>
+        <p><strong>q:</strong> <span id="q"></span></p>
+        <p><strong>n:</strong> <span id="n"></span></p>
+        <p><strong>e:</strong> <span id="e"></span></p>
+        <p><strong>d:</strong> <span id="d"></span></p>
     </div>
 
     <!-- Encryption -->
@@ -45,12 +42,9 @@
             Each character in the message is converted to a number (ASCII code) and encrypted using the formula:
             <b>ciphertext = (plaintext<sup>e</sup>) mod n</b>.
         </p>
-        <form method="POST" onsubmit="encryptMessage(event)">
-            <input type="hidden" name="action" value="encrypt">
-            <textarea id="message" placeholder="Enter message to encrypt">{{ plaintext }}</textarea>
-            <button type="submit">Encrypt</button>
-        </form>
-        <p><strong>Encrypted Message:</strong> <span id="encrypted-message">{{ ciphertext }}</span></p>
+        <textarea id="message" placeholder="Enter message to encrypt"></textarea>
+        <button onclick="encryptMessage()">Encrypt</button>
+        <p><strong>Encrypted Message:</strong> <span id="encrypted-message"></span></p>
     </div>
 
     <!-- Decryption -->
@@ -60,12 +54,9 @@
             The encrypted numbers are decrypted using the private key <b>d</b> with the formula:
             <b>plaintext = (ciphertext<sup>d</sup>) mod n</b>. This restores the original message.
         </p>
-        <form method="POST" onsubmit="decryptMessage(event)">
-            <input type="hidden" name="action" value="decrypt">
-            <textarea id="ciphertext" placeholder="Enter ciphertext to decrypt">{{ ciphertext }}</textarea>
-            <button type="submit">Decrypt</button>
-        </form>
-        <p><strong>Decrypted Message:</strong> <span id="decrypted-message">{{ decrypted }}</span></p>
+        <textarea id="ciphertext" placeholder="Enter ciphertext to decrypt"></textarea>
+        <button onclick="decryptMessage()">Decrypt</button>
+        <p><strong>Decrypted Message:</strong> <span id="decrypted-message"></span></p>
     </div>
 
 </div>
@@ -73,20 +64,39 @@
 <script>
     let p, q, n, e, d;
 
-    function generateKeys(event) {
-        event.preventDefault();
-        p = BigInt(document.getElementById('p').innerText);
-        q = BigInt(document.getElementById('q').innerText);
+    function generateKeys() {
+        // Generate random prime numbers p and q
+        p = BigInt(generatePrime());
+        q = BigInt(generatePrime());
         n = p * q;
         let r = (p - 1n) * (q - 1n);
 
         e = findPublicExponent(r);
         d = findModInverse(e, r);
 
-        // Update UI with generated keys
+        // Display the keys
+        document.getElementById('p').innerText = p;
+        document.getElementById('q').innerText = q;
         document.getElementById('n').innerText = n;
         document.getElementById('e').innerText = e;
         document.getElementById('d').innerText = d;
+    }
+
+    function generatePrime() {
+        // Basic prime number generator (for demonstration purposes)
+        let num = Math.floor(Math.random() * 100) + 2;
+        while (!isPrime(num)) {
+            num++;
+        }
+        return num;
+    }
+
+    function isPrime(num) {
+        if (num <= 1) return false;
+        for (let i = 2; i <= Math.sqrt(num); i++) {
+            if (num % i === 0) return false;
+        }
+        return true;
     }
 
     function findPublicExponent(r) {
@@ -115,8 +125,7 @@
         return null;
     }
 
-    function encryptMessage(event) {
-        event.preventDefault();
+    function encryptMessage() {
         let message = document.getElementById('message').value;
         let encrypted = encrypt(message, e, n);
         document.getElementById('encrypted-message').innerText = encrypted.join(', ');
@@ -144,8 +153,7 @@
         return result;
     }
 
-    function decryptMessage(event) {
-        event.preventDefault();
+    function decryptMessage() {
         let ciphertext = document.getElementById('ciphertext').value.split(',').map(BigInt);
         let decrypted = decrypt(ciphertext, d, n);
         document.getElementById('decrypted-message').innerText = decrypted;
