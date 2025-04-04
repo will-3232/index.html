@@ -75,10 +75,10 @@
 
     function generateKeys(event) {
         event.preventDefault();
-        p = parseInt(document.getElementById('p').innerText);
-        q = parseInt(document.getElementById('q').innerText);
+        p = BigInt(document.getElementById('p').innerText);
+        q = BigInt(document.getElementById('q').innerText);
         n = p * q;
-        let r = (p - 1) * (q - 1);
+        let r = (p - 1n) * (q - 1n);
 
         e = findPublicExponent(r);
         d = findModInverse(e, r);
@@ -90,15 +90,15 @@
     }
 
     function findPublicExponent(r) {
-        for (let i = 2; i < r; i++) {
-            if (gcd(i, r) === 1) {
+        for (let i = 2n; i < r; i++) {
+            if (gcd(i, r) === 1n) {
                 return i;
             }
         }
     }
 
     function gcd(a, b) {
-        while (b) {
+        while (b !== 0n) {
             let temp = b;
             b = a % b;
             a = temp;
@@ -107,8 +107,8 @@
     }
 
     function findModInverse(e, r) {
-        for (let i = 2; i < r; i++) {
-            if ((i * e) % r === 1) {
+        for (let i = 2n; i < r; i++) {
+            if ((i * e) % r === 1n) {
                 return i;
             }
         }
@@ -125,20 +125,20 @@
     function encrypt(message, e, n) {
         let encrypted = [];
         for (let i = 0; i < message.length; i++) {
-            let charCode = message.charCodeAt(i);
+            let charCode = BigInt(message.charCodeAt(i));
             encrypted.push(bigIntModPow(charCode, e, n));
         }
         return encrypted;
     }
 
     function bigIntModPow(base, exponent, modulus) {
-        let result = 1;
+        let result = 1n;
         base = base % modulus;
-        while (exponent > 0) {
-            if (exponent % 2 === 1) {
+        while (exponent > 0n) {
+            if (exponent % 2n === 1n) {
                 result = (result * base) % modulus;
             }
-            exponent = Math.floor(exponent / 2);
+            exponent = exponent / 2n;
             base = (base * base) % modulus;
         }
         return result;
@@ -146,7 +146,7 @@
 
     function decryptMessage(event) {
         event.preventDefault();
-        let ciphertext = document.getElementById('ciphertext').value.split(',').map(Number);
+        let ciphertext = document.getElementById('ciphertext').value.split(',').map(BigInt);
         let decrypted = decrypt(ciphertext, d, n);
         document.getElementById('decrypted-message').innerText = decrypted;
     }
@@ -154,7 +154,7 @@
     function decrypt(ciphertext, d, n) {
         let decrypted = '';
         for (let i = 0; i < ciphertext.length; i++) {
-            decrypted += String.fromCharCode(bigIntModPow(ciphertext[i], d, n));
+            decrypted += String.fromCharCode(Number(bigIntModPow(ciphertext[i], d, n)));
         }
         return decrypted;
     }
