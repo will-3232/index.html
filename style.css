@@ -1,0 +1,105 @@
+/* Fonts */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    color: #2c2c2c;
+    background-color: #fffaf3;
+  }
+  
+  h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .container {
+    width: 90%;
+    max-width: 1100px;
+    margin: auto;
+  }
+  
+  /* Header */
+  header {
+    background-color: #fff2e1;
+    padding: 1rem 0;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  header h1 {
+    display: inline-block;
+    font-size: 2rem;
+    color: #4a2d0b;
+  }
+  
+  nav {
+    float: right;
+  }
+  
+  nav a {
+    margin-left: 1.5rem;
+    text-decoration: none;
+    color: #4a2d0b;
+    font-weight: 600;
+  }
+  
+  nav a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Hero Section */
+  .hero {
+    text-align: center;
+    padding: 5rem 0;
+    background: url('https://images.unsplash.com/photo-1600051841544-3166ec5f8eb2?auto=format&fit=crop&w=1500&q=80') no-repeat center center/cover;
+    color: #fff;
+  }
+  
+  .hero h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .hero p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .hero button {
+    background-color: #4a2d0b;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .hero button:hover {
+    background-color: #6b3a13;
+  }
+  
+  /* Features */
+  .features {
+    background-color: #fff;
+    padding: 4rem 0;
+  }
+  
+  .features .feature {
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .features .container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+  
+  /* Footer */
+  footer {
+    background-color: #fff2e1;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #4a2d0b;
+  }
+  
